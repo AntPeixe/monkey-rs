@@ -17,8 +17,21 @@ enum Token {
     LIMITER(LimiterToken),
     ASSIGN,
     PLUS,
+    MINUS,
+    BANG,
+    ASTERISK,
+    SLASH,
+    LT,
+    GT,
+    EQ,
+    NotEq,
     FUNCTION,
     LET,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN,
 }
 
 fn is_letter(ch: char) -> bool {
@@ -38,6 +51,11 @@ fn look_up_identifier(ident: String) -> Token {
     return match ident.as_str() {
         "fn" => Token::FUNCTION,
         "let" => Token::LET,
+        "true" => Token::TRUE,
+        "false" => Token::FALSE,
+        "if" => Token::IF,
+        "else" => Token::ELSE,
+        "return" => Token::RETURN,
         _ => Token::IDENTIFIER(ident),
     };
 }
@@ -75,7 +93,25 @@ impl Iterator for Lexer {
                 '{' => Token::LIMITER(LimiterToken::LBRACE),
                 '}' => Token::LIMITER(LimiterToken::RBRACE),
                 '+' => Token::PLUS,
-                '=' => Token::ASSIGN,
+                '-' => Token::MINUS,
+                '=' => {
+                    if let Some('=') = self.peek_char_head() {
+                        Token::EQ
+                    } else {
+                        Token::ASSIGN
+                    }
+                }
+                '!' => {
+                    if let Some('=') = self.peek_char_head() {
+                        Token::NotEq
+                    } else {
+                        Token::BANG
+                    }
+                }
+                '*' => Token::ASTERISK,
+                '/' => Token::SLASH,
+                '<' => Token::LT,
+                '>' => Token::GT,
                 _ => {
                     if is_letter(x) {
                         look_up_identifier(self.read_identifier())
@@ -101,13 +137,28 @@ impl Lexer {
         self.ch = self.input.chars().nth(self.read_position);
     }
 
+    fn peek_char_head(&self) -> Option<char> {
+        return self.input.chars().nth(self.read_position + 1);
+    }
+
     fn increment_read_position(&mut self, token: &Token) {
         match token {
             Token::ILLEGAL | Token::EOF => (),
             Token::IDENTIFIER(s) | Token::LITERAL(s) => self.read_position += s.len(),
-            Token::LIMITER(_) | Token::ASSIGN | Token::PLUS => self.read_position += 1,
-            Token::FUNCTION => self.read_position += 2,
+            Token::LIMITER(_)
+            | Token::ASSIGN
+            | Token::PLUS
+            | Token::MINUS
+            | Token::BANG
+            | Token::ASTERISK
+            | Token::SLASH
+            | Token::LT
+            | Token::GT => self.read_position += 1,
+            Token::FUNCTION | Token::IF | Token::EQ | Token::NotEq => self.read_position += 2,
             Token::LET => self.read_position += 3,
+            Token::TRUE | Token::ELSE => self.read_position += 4,
+            Token::FALSE => self.read_position += 5,
+            Token::RETURN => self.read_position += 6,
         }
     }
 
@@ -153,11 +204,21 @@ fn lexer_test() {
         x + y;
     };
     let result = add(five, ten);
+    !-/*5;
+    5 < 10 > 5;
+    if (5 < 10) {
+        return true;
+    } else {
+        return false;
+    }
+
+    10 == 10;
+    10 != 9;
     ";
     let input = String::from(program);
     let lex = Lexer::from(input);
 
-    let tests: [Token; 37] = [
+    let tests: [Token; 74] = [
         Token::LET,
         Token::IDENTIFIER(String::from("five")),
         Token::ASSIGN,
@@ -194,13 +255,50 @@ fn lexer_test() {
         Token::IDENTIFIER(String::from("ten")),
         Token::LIMITER(LimiterToken::RPAREN),
         Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::BANG,
+        Token::MINUS,
+        Token::SLASH,
+        Token::ASTERISK,
+        Token::LITERAL(String::from("5")),
+        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::LITERAL(String::from("5")),
+        Token::LT,
+        Token::LITERAL(String::from("10")),
+        Token::GT,
+        Token::LITERAL(String::from("5")),
+        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::IF,
+        Token::LIMITER(LimiterToken::LPAREN),
+        Token::LITERAL(String::from("5")),
+        Token::LT,
+        Token::LITERAL(String::from("10")),
+        Token::LIMITER(LimiterToken::RPAREN),
+        Token::LIMITER(LimiterToken::LBRACE),
+        Token::RETURN,
+        Token::TRUE,
+        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::LIMITER(LimiterToken::RBRACE),
+        Token::ELSE,
+        Token::LIMITER(LimiterToken::LBRACE),
+        Token::RETURN,
+        Token::FALSE,
+        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::LIMITER(LimiterToken::RBRACE),
+        Token::LITERAL(String::from("10")),
+        Token::EQ,
+        Token::LITERAL(String::from("10")),
+        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::LITERAL(String::from("10")),
+        Token::NotEq,
+        Token::LITERAL(String::from("9")),
+        Token::LIMITER(LimiterToken::SEMICOLON),
         Token::EOF,
     ];
 
     lex.into_iter()
-        .zip(tests.iter())
+        .zip(tests.into_iter())
         .map(|(token, test_token)| {
-            assert_eq!(token, *test_token);
+            assert_eq!(token, test_token);
         })
         .for_each(drop);
 }
