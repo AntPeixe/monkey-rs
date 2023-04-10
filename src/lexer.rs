@@ -96,6 +96,8 @@ impl Iterator for Lexer {
 impl Lexer {
     fn read_char(&mut self) {
         // FIXME: it's probably bad to create the iterator everytime
+        // However having `input` as the iterator means that when reading `take_while` requires a
+        // clone everytime.
         self.ch = self.input.chars().nth(self.read_position);
     }
 
@@ -133,11 +135,13 @@ impl Lexer {
             .chars()
             .skip(self.read_position)
             .take_while(|c| is_whitespace(*c))
-            .collect::<String>();
+            .count();
 
         // spaces don't create a token so we much increment and re-read the next char
-        self.read_position += spaces.len();
-        self.read_char();
+        if spaces > 0 {
+            self.read_position += spaces;
+            self.read_char();
+        }
     }
 }
 
