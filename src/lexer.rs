@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq)]
-enum LimiterToken {
+pub enum LimiterToken {
     COMMA,
     SEMICOLON,
     LPAREN,
@@ -9,7 +9,7 @@ enum LimiterToken {
 }
 
 #[derive(Debug, PartialEq)]
-enum Token {
+pub enum Token {
     ILLEGAL,
     EOF,
     IDENTIFIER(String),
@@ -32,6 +32,29 @@ enum Token {
     IF,
     ELSE,
     RETURN,
+}
+
+impl Token {
+    fn len(&self) -> usize {
+     return match self {
+            Token::ILLEGAL | Token::EOF => 0,
+            Token::IDENTIFIER(s) | Token::LITERAL(s) => s.len(),
+            Token::LIMITER(_)
+            | Token::ASSIGN
+            | Token::PLUS
+            | Token::MINUS
+            | Token::BANG
+            | Token::ASTERISK
+            | Token::SLASH
+            | Token::LT
+            | Token::GT => 1,
+            Token::FUNCTION | Token::IF | Token::EQ | Token::NotEq => 2,
+            Token::LET => 3,
+            Token::TRUE | Token::ELSE => 4,
+            Token::FALSE => 5,
+            Token::RETURN => 6,
+        };
+    }
 }
 
 fn is_letter(ch: char) -> bool {
@@ -60,7 +83,7 @@ fn look_up_identifier(ident: String) -> Token {
     };
 }
 
-struct Lexer {
+pub struct Lexer {
     input: String,
     read_position: usize,
     ch: Option<char>,
@@ -123,6 +146,7 @@ impl Iterator for Lexer {
                 }
             },
         };
+        if token == Token::EOF { return None; }
         self.increment_read_position(&token);
         self.read_char();
         return Some(token);
@@ -142,24 +166,7 @@ impl Lexer {
     }
 
     fn increment_read_position(&mut self, token: &Token) {
-        match token {
-            Token::ILLEGAL | Token::EOF => (),
-            Token::IDENTIFIER(s) | Token::LITERAL(s) => self.read_position += s.len(),
-            Token::LIMITER(_)
-            | Token::ASSIGN
-            | Token::PLUS
-            | Token::MINUS
-            | Token::BANG
-            | Token::ASTERISK
-            | Token::SLASH
-            | Token::LT
-            | Token::GT => self.read_position += 1,
-            Token::FUNCTION | Token::IF | Token::EQ | Token::NotEq => self.read_position += 2,
-            Token::LET => self.read_position += 3,
-            Token::TRUE | Token::ELSE => self.read_position += 4,
-            Token::FALSE => self.read_position += 5,
-            Token::RETURN => self.read_position += 6,
-        }
+        self.read_position += token.len();
     }
 
     fn read_identifier(&self) -> String {
@@ -218,7 +225,7 @@ fn lexer_test() {
     let input = String::from(program);
     let lex = Lexer::from(input);
 
-    let tests: [Token; 74] = [
+    let tests: [Token; 73] = [
         Token::LET,
         Token::IDENTIFIER(String::from("five")),
         Token::ASSIGN,
@@ -292,7 +299,6 @@ fn lexer_test() {
         Token::NotEq,
         Token::LITERAL(String::from("9")),
         Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::EOF,
     ];
 
     lex.into_iter()
