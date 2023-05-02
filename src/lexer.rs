@@ -1,85 +1,85 @@
 #[derive(Debug, PartialEq)]
 pub enum LimiterToken {
-    COMMA,
-    SEMICOLON,
-    LPAREN,
-    RPAREN,
-    LBRACE,
-    RBRACE,
+    Comma,
+    Semicolon,
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    ILLEGAL,
-    EOF,
-    IDENTIFIER(String),
-    LITERAL(String),
-    LIMITER(LimiterToken),
-    ASSIGN,
-    PLUS,
-    MINUS,
-    BANG,
-    ASTERISK,
-    SLASH,
+    Illegal,
+    Eof,
+    Identifier(String),
+    Literal(String),
+    Limiter(LimiterToken),
+    Assign,
+    Plus,
+    Minus,
+    Bang,
+    Asterisk,
+    Slash,
     LT,
     GT,
     EQ,
     NotEq,
-    FUNCTION,
-    LET,
-    TRUE,
-    FALSE,
-    IF,
-    ELSE,
-    RETURN,
+    Function,
+    Let,
+    True,
+    False,
+    If,
+    Else,
+    Return,
 }
 
 impl Token {
     fn len(&self) -> usize {
-     return match self {
-            Token::ILLEGAL | Token::EOF => 0,
-            Token::IDENTIFIER(s) | Token::LITERAL(s) => s.len(),
-            Token::LIMITER(_)
-            | Token::ASSIGN
-            | Token::PLUS
-            | Token::MINUS
-            | Token::BANG
-            | Token::ASTERISK
-            | Token::SLASH
+     match self {
+            Token::Illegal | Token::Eof => 0,
+            Token::Identifier(s) | Token::Literal(s) => s.len(),
+            Token::Limiter(_)
+            | Token::Assign
+            | Token::Plus
+            | Token::Minus
+            | Token::Bang
+            | Token::Asterisk
+            | Token::Slash
             | Token::LT
             | Token::GT => 1,
-            Token::FUNCTION | Token::IF | Token::EQ | Token::NotEq => 2,
-            Token::LET => 3,
-            Token::TRUE | Token::ELSE => 4,
-            Token::FALSE => 5,
-            Token::RETURN => 6,
-        };
+            Token::Function | Token::If | Token::EQ | Token::NotEq => 2,
+            Token::Let => 3,
+            Token::True | Token::Else => 4,
+            Token::False => 5,
+            Token::Return => 6,
+        }
     }
 }
 
 fn is_letter(ch: char) -> bool {
     // allowing `_` for identifiers
-    return ch.is_ascii_alphabetic() || ch == '_';
+    ch.is_ascii_alphabetic() || ch == '_'
 }
 
 fn is_digit(ch: char) -> bool {
-    return ch.is_numeric();
+    ch.is_numeric()
 }
 
 fn is_whitespace(ch: char) -> bool {
-    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+    ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
 
 fn look_up_identifier(ident: String) -> Token {
     return match ident.as_str() {
-        "fn" => Token::FUNCTION,
-        "let" => Token::LET,
-        "true" => Token::TRUE,
-        "false" => Token::FALSE,
-        "if" => Token::IF,
-        "else" => Token::ELSE,
-        "return" => Token::RETURN,
-        _ => Token::IDENTIFIER(ident),
+        "fn" => Token::Function,
+        "let" => Token::Let,
+        "true" => Token::True,
+        "false" => Token::False,
+        "if" => Token::If,
+        "else" => Token::Else,
+        "return" => Token::Return,
+        _ => Token::Identifier(ident),
     };
 }
 
@@ -97,7 +97,7 @@ impl From<String> for Lexer {
             ch: None,
         };
         l.read_char();
-        return l;
+        l
     }
 }
 
@@ -107,49 +107,49 @@ impl Iterator for Lexer {
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_white_spaces();
         let token: Token = match self.ch {
-            None => Token::EOF,
+            None => Token::Eof,
             Some(x) => match x {
-                ',' => Token::LIMITER(LimiterToken::COMMA),
-                ';' => Token::LIMITER(LimiterToken::SEMICOLON),
-                '(' => Token::LIMITER(LimiterToken::LPAREN),
-                ')' => Token::LIMITER(LimiterToken::RPAREN),
-                '{' => Token::LIMITER(LimiterToken::LBRACE),
-                '}' => Token::LIMITER(LimiterToken::RBRACE),
-                '+' => Token::PLUS,
-                '-' => Token::MINUS,
+                ',' => Token::Limiter(LimiterToken::Comma),
+                ';' => Token::Limiter(LimiterToken::Semicolon),
+                '(' => Token::Limiter(LimiterToken::LParen),
+                ')' => Token::Limiter(LimiterToken::RParen),
+                '{' => Token::Limiter(LimiterToken::LBrace),
+                '}' => Token::Limiter(LimiterToken::RBrace),
+                '+' => Token::Plus,
+                '-' => Token::Minus,
                 '=' => {
                     if let Some('=') = self.peek_char_head() {
                         Token::EQ
                     } else {
-                        Token::ASSIGN
+                        Token::Assign
                     }
                 }
                 '!' => {
                     if let Some('=') = self.peek_char_head() {
                         Token::NotEq
                     } else {
-                        Token::BANG
+                        Token::Bang
                     }
                 }
-                '*' => Token::ASTERISK,
-                '/' => Token::SLASH,
+                '*' => Token::Asterisk,
+                '/' => Token::Slash,
                 '<' => Token::LT,
                 '>' => Token::GT,
                 _ => {
                     if is_letter(x) {
                         look_up_identifier(self.read_identifier())
                     } else if is_digit(x) {
-                        Token::LITERAL(self.read_number().to_string())
+                        Token::Literal(self.read_number())
                     } else {
-                        Token::ILLEGAL
+                        Token::Illegal
                     }
                 }
             },
         };
-        if token == Token::EOF { return None; }
+        if token == Token::Eof { return None; }
         self.increment_read_position(&token);
         self.read_char();
-        return Some(token);
+        Some(token)
     }
 }
 
@@ -226,79 +226,79 @@ fn lexer_test() {
     let lex = Lexer::from(input);
 
     let tests: [Token; 73] = [
-        Token::LET,
-        Token::IDENTIFIER(String::from("five")),
-        Token::ASSIGN,
-        Token::LITERAL(String::from("5")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LET,
-        Token::IDENTIFIER(String::from("ten")),
-        Token::ASSIGN,
-        Token::LITERAL(String::from("10")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LET,
-        Token::IDENTIFIER(String::from("add")),
-        Token::ASSIGN,
-        Token::FUNCTION,
-        Token::LIMITER(LimiterToken::LPAREN),
-        Token::IDENTIFIER(String::from("x")),
-        Token::LIMITER(LimiterToken::COMMA),
-        Token::IDENTIFIER(String::from("y")),
-        Token::LIMITER(LimiterToken::RPAREN),
-        Token::LIMITER(LimiterToken::LBRACE),
-        Token::IDENTIFIER(String::from("x")),
-        Token::PLUS,
-        Token::IDENTIFIER(String::from("y")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LIMITER(LimiterToken::RBRACE),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LET,
-        Token::IDENTIFIER(String::from("result")),
-        Token::ASSIGN,
-        Token::IDENTIFIER(String::from("add")),
-        Token::LIMITER(LimiterToken::LPAREN),
-        Token::IDENTIFIER(String::from("five")),
-        Token::LIMITER(LimiterToken::COMMA),
-        Token::IDENTIFIER(String::from("ten")),
-        Token::LIMITER(LimiterToken::RPAREN),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::BANG,
-        Token::MINUS,
-        Token::SLASH,
-        Token::ASTERISK,
-        Token::LITERAL(String::from("5")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LITERAL(String::from("5")),
+        Token::Let,
+        Token::Identifier(String::from("five")),
+        Token::Assign,
+        Token::Literal(String::from("5")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Let,
+        Token::Identifier(String::from("ten")),
+        Token::Assign,
+        Token::Literal(String::from("10")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Let,
+        Token::Identifier(String::from("add")),
+        Token::Assign,
+        Token::Function,
+        Token::Limiter(LimiterToken::LParen),
+        Token::Identifier(String::from("x")),
+        Token::Limiter(LimiterToken::Comma),
+        Token::Identifier(String::from("y")),
+        Token::Limiter(LimiterToken::RParen),
+        Token::Limiter(LimiterToken::LBrace),
+        Token::Identifier(String::from("x")),
+        Token::Plus,
+        Token::Identifier(String::from("y")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Limiter(LimiterToken::RBrace),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Let,
+        Token::Identifier(String::from("result")),
+        Token::Assign,
+        Token::Identifier(String::from("add")),
+        Token::Limiter(LimiterToken::LParen),
+        Token::Identifier(String::from("five")),
+        Token::Limiter(LimiterToken::Comma),
+        Token::Identifier(String::from("ten")),
+        Token::Limiter(LimiterToken::RParen),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Bang,
+        Token::Minus,
+        Token::Slash,
+        Token::Asterisk,
+        Token::Literal(String::from("5")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Literal(String::from("5")),
         Token::LT,
-        Token::LITERAL(String::from("10")),
+        Token::Literal(String::from("10")),
         Token::GT,
-        Token::LITERAL(String::from("5")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::IF,
-        Token::LIMITER(LimiterToken::LPAREN),
-        Token::LITERAL(String::from("5")),
+        Token::Literal(String::from("5")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::If,
+        Token::Limiter(LimiterToken::LParen),
+        Token::Literal(String::from("5")),
         Token::LT,
-        Token::LITERAL(String::from("10")),
-        Token::LIMITER(LimiterToken::RPAREN),
-        Token::LIMITER(LimiterToken::LBRACE),
-        Token::RETURN,
-        Token::TRUE,
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LIMITER(LimiterToken::RBRACE),
-        Token::ELSE,
-        Token::LIMITER(LimiterToken::LBRACE),
-        Token::RETURN,
-        Token::FALSE,
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LIMITER(LimiterToken::RBRACE),
-        Token::LITERAL(String::from("10")),
+        Token::Literal(String::from("10")),
+        Token::Limiter(LimiterToken::RParen),
+        Token::Limiter(LimiterToken::LBrace),
+        Token::Return,
+        Token::True,
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Limiter(LimiterToken::RBrace),
+        Token::Else,
+        Token::Limiter(LimiterToken::LBrace),
+        Token::Return,
+        Token::False,
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Limiter(LimiterToken::RBrace),
+        Token::Literal(String::from("10")),
         Token::EQ,
-        Token::LITERAL(String::from("10")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
-        Token::LITERAL(String::from("10")),
+        Token::Literal(String::from("10")),
+        Token::Limiter(LimiterToken::Semicolon),
+        Token::Literal(String::from("10")),
         Token::NotEq,
-        Token::LITERAL(String::from("9")),
-        Token::LIMITER(LimiterToken::SEMICOLON),
+        Token::Literal(String::from("9")),
+        Token::Limiter(LimiterToken::Semicolon),
     ];
 
     lex.into_iter()
