@@ -1,6 +1,8 @@
 mod lexer;
 mod repl;
+mod parser;
+mod ast;
 
 fn main() {
-    repl::start();
+    let _ = repl::start();
 }
