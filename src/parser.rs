@@ -1,7 +1,7 @@
 use std::mem::take;
 
 use crate::ast::{Expression, Program, Statement};
-use crate::lexer::{Lexer, Token, LimiterToken};
+use crate::lexer::{Lexer, LimiterToken, Token};
 
 struct Parser {
     lexer: Lexer,
@@ -49,7 +49,6 @@ impl Parser {
         self.peek_token = self.lexer.next();
     }
 
-
     fn curr_token_is(&self, other: Token) -> bool {
         match &self.curr_token {
             Some(t) => *t == other,
@@ -66,7 +65,10 @@ impl Parser {
 
     fn expect_peek(&mut self, other: Token) {
         match &self.peek_token {
-            Some(t) => {assert_eq!(*t, other); self.next_token()},
+            Some(t) => {
+                assert_eq!(*t, other);
+                self.next_token()
+            }
             None => (),
         }
     }
@@ -85,9 +87,9 @@ impl Parser {
             Some(Token::Identifier(s)) => Expression::Identifier(Token::Identifier(s.clone())),
             _ => return None,
         };
-        self.next_token();  // current is the identifier and peek the equal sign
+        self.next_token(); // current is the identifier and peek the equal sign
 
-        self.expect_peek(Token::Assign);  // current is the equal sign
+        self.expect_peek(Token::Assign); // current is the equal sign
 
         while !self.curr_token_is(Token::Limiter(LimiterToken::Semicolon)) {
             self.next_token();
@@ -111,11 +113,21 @@ fn let_statement_test() {
     assert_eq!(prog.statements.len(), 3);
 
     let tests: [Statement; 3] = [
-        Statement::Let(Expression::Identifier(Token::Identifier(String::from("five"))), Expression::Identifier(Token::Assign)),
-        Statement::Let(Expression::Identifier(Token::Identifier(String::from("ten"))), Expression::Identifier(Token::Assign)),
-        Statement::Let(Expression::Identifier(Token::Identifier(String::from("foobar"))), Expression::Identifier(Token::Assign)),
+        Statement::Let(
+            Expression::Identifier(Token::Identifier(String::from("five"))),
+            Expression::Identifier(Token::Assign),
+        ),
+        Statement::Let(
+            Expression::Identifier(Token::Identifier(String::from("ten"))),
+            Expression::Identifier(Token::Assign),
+        ),
+        Statement::Let(
+            Expression::Identifier(Token::Identifier(String::from("foobar"))),
+            Expression::Identifier(Token::Assign),
+        ),
     ];
-    prog.statements.into_iter()
+    prog.statements
+        .into_iter()
         .zip(tests.into_iter())
         .map(|(stmt, test_stmt)| {
             assert_eq!(stmt, test_stmt);
@@ -139,7 +151,8 @@ fn return_statement_test() {
         Statement::Return(Expression::Identifier(Token::Assign)),
         Statement::Return(Expression::Identifier(Token::Assign)),
     ];
-    prog.statements.into_iter()
+    prog.statements
+        .into_iter()
         .zip(tests.into_iter())
         .map(|(stmt, test_stmt)| {
             assert_eq!(stmt, test_stmt);

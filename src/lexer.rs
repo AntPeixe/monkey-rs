@@ -36,7 +36,7 @@ pub enum Token {
 
 impl Token {
     fn len(&self) -> usize {
-     match self {
+        match self {
             Token::Illegal | Token::Eof => 0,
             Token::Identifier(s) | Token::Literal(s) => s.len(),
             Token::Limiter(_)
@@ -146,7 +146,9 @@ impl Iterator for Lexer {
                 }
             },
         };
-        if token == Token::Eof { return None; }
+        if token == Token::Eof {
+            return None;
+        }
         self.increment_read_position(&token);
         self.read_char();
         Some(token)
