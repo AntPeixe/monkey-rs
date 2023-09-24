@@ -4,10 +4,11 @@ trait Node {
     // fn token_literal(&self) -> &Token;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     Let(Expression, Expression),
     Return(Expression),
+    Expression(Expression),
 }
 
 impl Statement {
@@ -24,7 +25,7 @@ impl Node for Statement {
     // }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expression {
     Identifier(Token),
 }

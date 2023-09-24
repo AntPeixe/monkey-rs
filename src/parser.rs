@@ -9,6 +9,17 @@ struct Parser {
     peek_token: Option<Token>,
 }
 
+#[derive(PartialOrd, Ord, PartialEq, Eq)]
+enum Precedence {
+    Lowest,
+    Equals,
+    LessGreater,
+    Sum,
+    Product,
+    Prefix,
+    Call,
+}
+
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
         let mut p = Self {
@@ -40,7 +51,7 @@ impl Parser {
         return match &self.curr_token {
             Some(Token::Let) => self.parse_let_statement(),
             Some(Token::Return) => self.parse_return_statement(),
-            _ => None,
+            _ => self.parse_expression_statement(),
         };
     }
 
@@ -98,6 +109,30 @@ impl Parser {
         // FIXME: this should be a proper expression
         let fixme = Expression::Identifier(Token::Assign);
         return Some(Statement::Let(identifier, fixme));
+    }
+
+    fn parse_expression_statement(&mut self) -> Option<Statement> {
+        // we know a token exists at the moment since we are in the middle of parsing a statment
+        let express = self.parse_expression(Precedence::Lowest);
+        return match express {
+            Some(e) => Some(Statement::Expression(e)),
+            None => None,
+        }
+
+    }
+
+    fn parse_expression(&self, precedence: Precedence) -> Option<Expression> {
+        // we know a token exists at the moment since we are in the middle of parsing a statment
+        let token = self.curr_token.as_ref()?;
+        return prefix_parsing_fn(&token);
+    }
+
+}
+
+fn prefix_parsing_fn(token: &Token) -> Option<Expression> {
+    match token {
+        Token::Identifier(ident) => Some(Expression::Identifier(Token::Identifier(ident.clone()))),
+        _ => None,
     }
 }
 
@@ -158,4 +193,25 @@ fn return_statement_test() {
             assert_eq!(stmt, test_stmt);
         })
         .for_each(drop);
+}
+
+#[test]
+fn identifier_expression_test() {
+    let input = "foobar;";
+
+    let lex = Lexer::from(String::from(input));
+    let mut pars = Parser::new(lex);
+    let prog = pars.parse_program();
+    assert_eq!(prog.statements.len(), 1);
+
+    let s = prog.statements[0].clone();
+    assert!(match s {
+        Statement::Expression(e) => {
+            if let Expression::Identifier(Token::Identifier(s)) = e {
+                assert_eq!(s, String::from("foobar"));
+                true
+            } else { false }
+        },
+        _ => false,
+    });
 }

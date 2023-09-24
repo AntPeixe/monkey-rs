@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum LimiterToken {
     Comma,
     Semicolon,
@@ -8,7 +8,7 @@ pub enum LimiterToken {
     RBrace,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Token {
     Illegal,
     Eof,
