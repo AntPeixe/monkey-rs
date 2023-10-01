@@ -136,6 +136,10 @@ fn prefix_parsing_fn(token: &Token) -> Option<Expression> {
     }
 }
 
+// fn get_infix_parse_fn(token: Token) -> impl Fn(Expression) -> Option<Expression> {
+//     todo!();
+// }
+
 #[test]
 fn let_statement_test() {
     let input = "let five = 5;
